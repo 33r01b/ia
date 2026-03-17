@@ -1,1 +1,6 @@
+# IDE
+.idea/
+
+# Local data
 var/
+bin/

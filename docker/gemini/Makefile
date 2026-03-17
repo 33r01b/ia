@@ -1,0 +1,38 @@
+AGENT_GEMINI_IMAGE ?= gemini-cli
+AGENT_GEMINI_STATE_MOUNT ?= gemini_state:/home/node/.gemini
+AGENT_GEMINI_ENV_MOUNT ?= /dev/null:/app/.env
+
+AGENT_NO_PROXY ?= host.docker.internal,localhost
+AGENT_DOCKER_ADD_HOST ?= host.docker.internal:host-gateway
+
+.PHONY: build run shell
+
+define require_var
+	@if [ -z "$($1)" ]; then echo "error: required env var $1 is not set"; exit 2; fi
+endef
+
+build:
+	$(call require_var,AGENT_ALL_PROXY)
+	docker build --no-cache -t $(AGENT_GEMINI_IMAGE) .
+
+run:
+	$(call require_var,AGENT_ALL_PROXY)
+	docker run -it --rm \
+	  --add-host=$(AGENT_DOCKER_ADD_HOST) \
+	  -v $(AGENT_GEMINI_STATE_MOUNT) \
+	  -v ./:/app \
+	  -v $(AGENT_GEMINI_ENV_MOUNT) \
+	  -e ALL_PROXY="$(AGENT_ALL_PROXY)" \
+	  -e NO_PROXY="$(AGENT_NO_PROXY)" \
+	  $(AGENT_GEMINI_IMAGE)
+
+shell:
+	$(call require_var,AGENT_ALL_PROXY)
+	docker run -it --rm \
+	  --add-host=$(AGENT_DOCKER_ADD_HOST) \
+	  -v $(AGENT_GEMINI_STATE_MOUNT) \
+	  -v ./:/app \
+	  -v $(AGENT_GEMINI_ENV_MOUNT) \
+	  -e ALL_PROXY="$(AGENT_ALL_PROXY)" \
+	  -e NO_PROXY="$(AGENT_NO_PROXY)" \
+	  $(AGENT_GEMINI_IMAGE)
