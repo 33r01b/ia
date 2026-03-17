@@ -7,7 +7,7 @@ import (
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  agent <agent> <language> <project> [--dry-run]")
+	fmt.Fprintln(os.Stderr, "  ia <agent> <language> <project> [--dry-run]")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintf(os.Stderr, "Agents:   %s\n", agentList())
 }

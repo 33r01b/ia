@@ -13,11 +13,11 @@ type Config struct {
 }
 
 type DockerConfig struct {
-	AllProxy   string `env:"AGENT_ALL_PROXY" env-required:"true"`
-	HTTPProxy  string `env:"AGENT_HTTP_PROXY"`
-	HTTPSProxy string `env:"AGENT_HTTPS_PROXY"`
-	NoProxy    string `env:"AGENT_NO_PROXY" env-default:"host.docker.internal,localhost"`
-	AddHost    string `env:"AGENT_DOCKER_ADD_HOST" env-default:"host.docker.internal:host-gateway"`
+	AllProxy   string `env:"IA_ALL_PROXY" env-required:"true"`
+	HTTPProxy  string `env:"IA_HTTP_PROXY"`
+	HTTPSProxy string `env:"IA_HTTPS_PROXY"`
+	NoProxy    string `env:"IA_NO_PROXY" env-default:"host.docker.internal,localhost"`
+	AddHost    string `env:"IA_DOCKER_ADD_HOST" env-default:"host.docker.internal:host-gateway"`
 }
 
 type AgentsConfig struct {
@@ -32,12 +32,12 @@ type AgentConfig struct {
 }
 
 type envConfig struct {
-	ClaudeImage        string `env:"AGENT_CLAUDE_IMAGE" env-default:"claude-code"`
-	ClaudeStateMount   string `env:"AGENT_CLAUDE_STATE_MOUNT" env-default:"claude_state:/home/agent/.claude"`
-	ClaudeConfigSource string `env:"AGENT_CLAUDE_CONFIG_SOURCE"`
-	CodexImage         string `env:"AGENT_CODEX_IMAGE" env-default:"codex-cli"`
-	CodexStateMount    string `env:"AGENT_CODEX_STATE_MOUNT" env-default:"codex_state:/home/node/.codex"`
-	CodexConfigSource  string `env:"AGENT_CODEX_CONFIG_SOURCE"`
+	ClaudeImage        string `env:"IA_CLAUDE_IMAGE" env-default:"claude-code"`
+	ClaudeStateMount   string `env:"IA_CLAUDE_STATE_MOUNT" env-default:"claude_state:/home/agent/.claude"`
+	ClaudeConfigSource string `env:"IA_CLAUDE_CONFIG_SOURCE"`
+	CodexImage         string `env:"IA_CODEX_IMAGE" env-default:"codex-cli"`
+	CodexStateMount    string `env:"IA_CODEX_STATE_MOUNT" env-default:"codex_state:/home/node/.codex"`
+	CodexConfigSource  string `env:"IA_CODEX_CONFIG_SOURCE"`
 	DockerConfig
 }
 

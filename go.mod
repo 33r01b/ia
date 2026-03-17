@@ -1,4 +1,4 @@
-module github.com/33r01b/agent
+module github.com/33r01b/ia
 
 go 1.26.1
 

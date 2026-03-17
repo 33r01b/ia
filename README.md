@@ -1,6 +1,10 @@
-# agent
+# ia
 
-CLI для запуска агентских контейнеров поверх локальных проектов.
+isolated agent runner
+
+Инструмент для изолированного запуска agent CLI в контейнерах поверх локальных проектов.
+
+`ia` поднимает отдельное контейнерное окружение для выбранного агента, монтирует в него локальный проект и дает запускать `claude`, `codex` и другие agent CLI без смешивания их состояния с хостовой системой.
 
 Сейчас поддерживаются два режима запуска:
 - `claude`
@@ -9,14 +13,14 @@ CLI для запуска агентских контейнеров поверх
 Формат команды:
 
 ```bash
-agent <agent> <language> <project> [--dry-run]
+ia <agent> <language> <project> [--dry-run]
 ```
 
 Примеры:
 
 ```bash
-agent codex go calc
-agent claude php billing --dry-run
+ia codex go calc
+ia claude php billing --dry-run
 ```
 
 При запуске проект монтируется так:
@@ -30,7 +34,7 @@ agent claude php billing --dry-run
 - `language` используется только для выбора пути внутри контейнера (`./<project>` -> `/app/<language>/<project>`)
 Внутрь `claude`, `codex` и других agent CLI он не передается как отдельный параметр и не включает какой-то специальный режим языка.
 
-После запуска `agent ...` ты попадаешь внутрь контейнера с подготовленным окружением агента.
+После запуска `ia ...` ты попадаешь внутрь контейнера с подготовленным окружением агента.
 Сама утилита не выполняет `codex`, `claude` или другой agent CLI автоматически: нужную команду внутри контейнера нужно запускать вручную.
 
 ## Requirements
@@ -46,7 +50,7 @@ agent claude php billing --dry-run
 Обязательные переменные:
 
 ```bash
-export AGENT_ALL_PROXY=http://host.docker.internal:8888
+export IA_ALL_PROXY=http://host.docker.internal:8888
 ```
 
 Почему в примере `host.docker.internal`:
@@ -54,29 +58,29 @@ export AGENT_ALL_PROXY=http://host.docker.internal:8888
 - `host.docker.internal` позволяет контейнеру обратиться к сервису на хост-машине
 - это полезно, если локальный proxy слушает на хосте
 
-Если у тебя другая схема сети, используй свое значение `AGENT_ALL_PROXY`.
+Если у тебя другая схема сети, используй свое значение `IA_ALL_PROXY`.
 
 Поддерживаемые переменные:
 
 ```bash
-AGENT_ALL_PROXY
-AGENT_HTTP_PROXY
-AGENT_HTTPS_PROXY
-AGENT_NO_PROXY
-AGENT_DOCKER_ADD_HOST
+IA_ALL_PROXY
+IA_HTTP_PROXY
+IA_HTTPS_PROXY
+IA_NO_PROXY
+IA_DOCKER_ADD_HOST
 
-AGENT_CLAUDE_IMAGE
-AGENT_CLAUDE_STATE_MOUNT
-AGENT_CLAUDE_CONFIG_SOURCE
+IA_CLAUDE_IMAGE
+IA_CLAUDE_STATE_MOUNT
+IA_CLAUDE_CONFIG_SOURCE
 
-AGENT_CODEX_IMAGE
-AGENT_CODEX_STATE_MOUNT
-AGENT_CODEX_CONFIG_SOURCE
+IA_CODEX_IMAGE
+IA_CODEX_STATE_MOUNT
+IA_CODEX_CONFIG_SOURCE
 ```
 
 Логика proxy:
-- если `AGENT_HTTP_PROXY` не задан, используется `AGENT_ALL_PROXY`
-- если `AGENT_HTTPS_PROXY` не задан, используется `AGENT_ALL_PROXY`
+- если `IA_HTTP_PROXY` не задан, используется `IA_ALL_PROXY`
+- если `IA_HTTPS_PROXY` не задан, используется `IA_ALL_PROXY`
 
 ## Make
 
@@ -90,9 +94,9 @@ make run ARGS='codex go calc'
 make dry-run ARGS='claude php billing'
 ```
 
-`make build` собирает бинарник в `./bin/agent`.
+`make build` собирает бинарник в `./bin/ia`.
 
-`make install` ставит бинарник в `${INSTALL_DIR}/agent`, по умолчанию в `~/.local/bin`.
+`make install` ставит бинарник в `${INSTALL_DIR}/ia`, по умолчанию в `~/.local/bin`.
 
 `make lint` запускает `golangci-lint run`.
 
@@ -118,21 +122,21 @@ make -C docker init-codex
 make -C docker/gemini init
 ```
 
-`docker/Makefile` использует те же `AGENT_*` переменные окружения, что и Go CLI.
-Для `init`-целей имя docker volume извлекается из `AGENT_*_STATE_MOUNT`.
+`docker/Makefile` использует те же `IA_*` переменные окружения, что и Go CLI.
+Для `init`-целей имя docker volume извлекается из `IA_*_STATE_MOUNT`.
 
 Для `claude` дополнительно нужен bind mount файла:
 
 ```bash
-export AGENT_CLAUDE_CONFIG_SOURCE=$HOME/.config/agent/claude/.claude.json
+export IA_CLAUDE_CONFIG_SOURCE=$HOME/.config/ia/claude/.claude.json
 ```
 
-В `docker/gemini/Makefile` переменные тоже переведены на `AGENT_*`, хотя сам `gemini` пока не участвует в Go CLI.
+В `docker/gemini/Makefile` переменные тоже переведены на `IA_*`, хотя сам `gemini` пока не участвует в Go CLI.
 
 ## Project Layout
 
 ```text
-cmd/agent            # entrypoint
+cmd/ia               # entrypoint
 internal/app         # CLI, config, validation, docker args
 docker/              # Dockerfile и make-цели для агентских образов
 Makefile             # build/run/install для CLI
@@ -143,7 +147,7 @@ Makefile             # build/run/install для CLI
 - `claude` и `codex` валидируются как фиксированный набор агентов.
 - `project` берется как директория относительно текущей директории.
 - `language` не влияет на host path и используется только для пути проекта внутри контейнера.
-- Claude state хранится в docker volume, а `~/.claude.json` монтируется как отдельный файл через `AGENT_CLAUDE_CONFIG_SOURCE`.
+- Claude state хранится в docker volume, а `~/.claude.json` монтируется как отдельный файл через `IA_CLAUDE_CONFIG_SOURCE`.
 
 This project was developed with assistance from AI coding tools.
 

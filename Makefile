@@ -1,5 +1,5 @@
-APP = agent
-CMD_DIR = ./cmd/agent
+APP = ia
+CMD_DIR = ./cmd/ia
 BIN_DIR = ./bin
 BIN = $(BIN_DIR)/$(APP)
 INSTALL_DIR ?= ~/.local/bin

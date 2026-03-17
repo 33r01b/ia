@@ -1,9 +1,9 @@
-AGENT_GEMINI_IMAGE ?= gemini-cli
-AGENT_GEMINI_STATE_MOUNT ?= gemini_state:/home/node/.gemini
-AGENT_GEMINI_ENV_MOUNT ?= /dev/null:/app/.env
+IA_GEMINI_IMAGE ?= gemini-cli
+IA_GEMINI_STATE_MOUNT ?= gemini_state:/home/node/.gemini
+IA_GEMINI_ENV_MOUNT ?= /dev/null:/app/.env
 
-AGENT_NO_PROXY ?= host.docker.internal,localhost
-AGENT_DOCKER_ADD_HOST ?= host.docker.internal:host-gateway
+IA_NO_PROXY ?= host.docker.internal,localhost
+IA_DOCKER_ADD_HOST ?= host.docker.internal:host-gateway
 
 .PHONY: init build run shell
 
@@ -18,30 +18,30 @@ endef
 state_volume = $(firstword $(subst :, ,$1))
 
 init:
-	$(call ensure_volume,$(call state_volume,$(AGENT_GEMINI_STATE_MOUNT)))
+	$(call ensure_volume,$(call state_volume,$(IA_GEMINI_STATE_MOUNT)))
 
 build:
-	$(call require_var,AGENT_ALL_PROXY)
-	docker build --no-cache -t $(AGENT_GEMINI_IMAGE) .
+	$(call require_var,IA_ALL_PROXY)
+	docker build --no-cache -t $(IA_GEMINI_IMAGE) .
 
 run:
-	$(call require_var,AGENT_ALL_PROXY)
+	$(call require_var,IA_ALL_PROXY)
 	docker run -it --rm \
-	  --add-host=$(AGENT_DOCKER_ADD_HOST) \
-	  -v $(AGENT_GEMINI_STATE_MOUNT) \
+	  --add-host=$(IA_DOCKER_ADD_HOST) \
+	  -v $(IA_GEMINI_STATE_MOUNT) \
 	  -v ./:/app \
-	  -v $(AGENT_GEMINI_ENV_MOUNT) \
-	  -e ALL_PROXY="$(AGENT_ALL_PROXY)" \
-	  -e NO_PROXY="$(AGENT_NO_PROXY)" \
-	  $(AGENT_GEMINI_IMAGE)
+	  -v $(IA_GEMINI_ENV_MOUNT) \
+	  -e ALL_PROXY="$(IA_ALL_PROXY)" \
+	  -e NO_PROXY="$(IA_NO_PROXY)" \
+	  $(IA_GEMINI_IMAGE)
 
 shell:
-	$(call require_var,AGENT_ALL_PROXY)
+	$(call require_var,IA_ALL_PROXY)
 	docker run -it --rm \
-	  --add-host=$(AGENT_DOCKER_ADD_HOST) \
-	  -v $(AGENT_GEMINI_STATE_MOUNT) \
+	  --add-host=$(IA_DOCKER_ADD_HOST) \
+	  -v $(IA_GEMINI_STATE_MOUNT) \
 	  -v ./:/app \
-	  -v $(AGENT_GEMINI_ENV_MOUNT) \
-	  -e ALL_PROXY="$(AGENT_ALL_PROXY)" \
-	  -e NO_PROXY="$(AGENT_NO_PROXY)" \
-	  $(AGENT_GEMINI_IMAGE)
+	  -v $(IA_GEMINI_ENV_MOUNT) \
+	  -e ALL_PROXY="$(IA_ALL_PROXY)" \
+	  -e NO_PROXY="$(IA_NO_PROXY)" \
+	  $(IA_GEMINI_IMAGE)
