@@ -117,7 +117,17 @@ make -C docker build-codex
 make -C docker run-codex
 ```
 
+Для явного создания state volumes:
+
+```bash
+make -C docker init
+make -C docker init-claude
+make -C docker init-codex
+make -C docker/gemini init
+```
+
 `docker/Makefile` использует те же `AGENT_*` переменные окружения, что и Go CLI.
+Для `init`-целей имя docker volume извлекается из `AGENT_*_STATE_MOUNT`.
 
 Для `claude` там также обязательны:
 

@@ -8,11 +8,25 @@ AGENT_CODEX_STATE_MOUNT ?= codex_state:/home/node/.codex
 AGENT_NO_PROXY ?= host.docker.internal,localhost
 AGENT_DOCKER_ADD_HOST ?= host.docker.internal:host-gateway
 
-.PHONY: build-claude run-claude shell-claude build-codex run-codex shell-codex
+.PHONY: init init-claude init-codex build-claude run-claude shell-claude build-codex run-codex shell-codex
 
 define require_var
 	@if [ -z "$($1)" ]; then echo "error: required env var $1 is not set"; exit 2; fi
 endef
+
+define ensure_volume
+	@docker volume inspect $1 >/dev/null 2>&1 || docker volume create $1 >/dev/null
+endef
+
+state_volume = $(firstword $(subst :, ,$1))
+
+init: init-claude init-codex
+
+init-claude:
+	$(call ensure_volume,$(call state_volume,$(AGENT_CLAUDE_STATE_MOUNT)))
+
+init-codex:
+	$(call ensure_volume,$(call state_volume,$(AGENT_CODEX_STATE_MOUNT)))
 
 build-claude:
 	$(call require_var,AGENT_ALL_PROXY)
