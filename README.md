@@ -49,12 +49,6 @@ agent claude php billing --dry-run
 export AGENT_ALL_PROXY=http://host.docker.internal:8888
 ```
 
-Дополнительно для `claude`:
-
-```bash
-export AGENT_CLAUDE_CONFIG_SOURCE=$HOME/.agent/claude/.claude.json
-```
-
 Почему в примере `host.docker.internal`:
 - агент запускается внутри Docker-контейнера
 - `host.docker.internal` позволяет контейнеру обратиться к сервису на хост-машине
@@ -74,12 +68,10 @@ AGENT_DOCKER_ADD_HOST
 AGENT_CLAUDE_IMAGE
 AGENT_CLAUDE_STATE_MOUNT
 AGENT_CLAUDE_CONFIG_SOURCE
-AGENT_CLAUDE_CONFIG_TARGET
 
 AGENT_CODEX_IMAGE
 AGENT_CODEX_STATE_MOUNT
 AGENT_CODEX_CONFIG_SOURCE
-AGENT_CODEX_CONFIG_TARGET
 ```
 
 Логика proxy:
@@ -129,10 +121,10 @@ make -C docker/gemini init
 `docker/Makefile` использует те же `AGENT_*` переменные окружения, что и Go CLI.
 Для `init`-целей имя docker volume извлекается из `AGENT_*_STATE_MOUNT`.
 
-Для `claude` там также обязательны:
+Для `claude` дополнительно нужен bind mount файла:
 
 ```bash
-export AGENT_CLAUDE_CONFIG_SOURCE=$HOME/.agent/claude/.claude.json
+export AGENT_CLAUDE_CONFIG_SOURCE=$HOME/.config/agent/claude/.claude.json
 ```
 
 В `docker/gemini/Makefile` переменные тоже переведены на `AGENT_*`, хотя сам `gemini` пока не участвует в Go CLI.
@@ -151,7 +143,7 @@ Makefile             # build/run/install для CLI
 - `claude` и `codex` валидируются как фиксированный набор агентов.
 - `project` берется как директория относительно текущей директории.
 - `language` не влияет на host path и используется только для пути проекта внутри контейнера.
-- `AGENT_CLAUDE_CONFIG_SOURCE` обязателен только для запуска `claude`, но не для `codex`.
+- Claude state хранится в docker volume, а `~/.claude.json` монтируется как отдельный файл через `AGENT_CLAUDE_CONFIG_SOURCE`.
 
 This project was developed with assistance from AI coding tools.
 

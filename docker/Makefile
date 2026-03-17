@@ -1,6 +1,7 @@
 AGENT_CLAUDE_IMAGE ?= claude-code
 AGENT_CLAUDE_STATE_MOUNT ?= claude_state:/home/agent/.claude
-AGENT_CLAUDE_CONFIG_TARGET ?= /home/agent/.claude.json
+AGENT_CLAUDE_CONFIG_SOURCE ?= $(HOME)/.config/agent/claude/.claude.json
+AGENT_CLAUDE_CONFIG_TARGET = /home/agent/.claude.json
 
 AGENT_CODEX_IMAGE ?= codex-cli
 AGENT_CODEX_STATE_MOUNT ?= codex_state:/home/node/.codex
@@ -12,6 +13,10 @@ AGENT_DOCKER_ADD_HOST ?= host.docker.internal:host-gateway
 
 define require_var
 	@if [ -z "$($1)" ]; then echo "error: required env var $1 is not set"; exit 2; fi
+endef
+
+define require_file
+	@if [ ! -f "$($1)" ]; then echo "error: required file $($1) does not exist"; exit 2; fi
 endef
 
 define ensure_volume
@@ -40,6 +45,7 @@ build-claude:
 run-claude:
 	$(call require_var,AGENT_ALL_PROXY)
 	$(call require_var,AGENT_CLAUDE_CONFIG_SOURCE)
+	$(call require_file,AGENT_CLAUDE_CONFIG_SOURCE)
 	docker run -it --rm \
 		--add-host=$(AGENT_DOCKER_ADD_HOST) \
 		-v $(AGENT_CLAUDE_STATE_MOUNT) \
@@ -52,6 +58,7 @@ run-claude:
 shell-claude:
 	$(call require_var,AGENT_ALL_PROXY)
 	$(call require_var,AGENT_CLAUDE_CONFIG_SOURCE)
+	$(call require_file,AGENT_CLAUDE_CONFIG_SOURCE)
 	docker run -it --rm \
 		--add-host=$(AGENT_DOCKER_ADD_HOST) \
 		-v $(AGENT_CLAUDE_STATE_MOUNT) \

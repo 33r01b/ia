@@ -39,9 +39,14 @@ func Run(args []string) int {
 		return 1
 	}
 
-	cfg, err := loadConfig(agentName)
+	cfg, err := loadConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: load config: %v\n", err)
+		return 1
+	}
+
+	if err := cfg.validateForAgent(agentName); err != nil {
+		fmt.Fprintf(os.Stderr, "error: validate config: %v\n", err)
 		return 1
 	}
 

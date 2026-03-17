@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -28,22 +29,19 @@ type AgentConfig struct {
 	Image        string
 	StateMount   string
 	ConfigSource string
-	ConfigTarget string
 }
 
 type envConfig struct {
 	ClaudeImage        string `env:"AGENT_CLAUDE_IMAGE" env-default:"claude-code"`
 	ClaudeStateMount   string `env:"AGENT_CLAUDE_STATE_MOUNT" env-default:"claude_state:/home/agent/.claude"`
 	ClaudeConfigSource string `env:"AGENT_CLAUDE_CONFIG_SOURCE"`
-	ClaudeConfigTarget string `env:"AGENT_CLAUDE_CONFIG_TARGET" env-default:"/home/agent/.claude.json"`
 	CodexImage         string `env:"AGENT_CODEX_IMAGE" env-default:"codex-cli"`
 	CodexStateMount    string `env:"AGENT_CODEX_STATE_MOUNT" env-default:"codex_state:/home/node/.codex"`
 	CodexConfigSource  string `env:"AGENT_CODEX_CONFIG_SOURCE"`
-	CodexConfigTarget  string `env:"AGENT_CODEX_CONFIG_TARGET"`
 	DockerConfig
 }
 
-func loadConfig(agentName string) (Config, error) {
+func loadConfig() (Config, error) {
 	var envCfg envConfig
 
 	if err := cleanenv.ReadEnv(&envCfg); err != nil {
@@ -65,19 +63,13 @@ func loadConfig(agentName string) (Config, error) {
 				Image:        envCfg.ClaudeImage,
 				StateMount:   envCfg.ClaudeStateMount,
 				ConfigSource: envCfg.ClaudeConfigSource,
-				ConfigTarget: envCfg.ClaudeConfigTarget,
 			},
 			Codex: AgentConfig{
 				Image:        envCfg.CodexImage,
 				StateMount:   envCfg.CodexStateMount,
 				ConfigSource: envCfg.CodexConfigSource,
-				ConfigTarget: envCfg.CodexConfigTarget,
 			},
 		},
-	}
-
-	if err := cfg.validateForAgent(agentName); err != nil {
-		return Config{}, err
 	}
 
 	return cfg, nil
@@ -88,6 +80,14 @@ func (c Config) validateForAgent(agentName string) error {
 	case "claude":
 		if c.Agents.Claude.ConfigSource == "" {
 			return fmt.Errorf("field %q is required but the value is not provided", "ClaudeConfigSource")
+		}
+
+		if _, err := os.Stat(c.Agents.Claude.ConfigSource); err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("claude config file does not exist: %s", c.Agents.Claude.ConfigSource)
+			}
+
+			return fmt.Errorf("stat claude config file: %w", err)
 		}
 	}
 

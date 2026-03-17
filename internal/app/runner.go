@@ -8,6 +8,7 @@ import (
 )
 
 const containerWorkRoot = "/app"
+const claudeConfigTarget = "/home/agent/.claude.json"
 
 func buildArgs(appCfg Config, agent, language, project string) []string {
 	cfg := appCfg.Agents.byName(agent)
@@ -28,7 +29,7 @@ func buildArgs(appCfg Config, agent, language, project string) []string {
 	}
 
 	if cfg.hasConfigMount() {
-		args = append(args, "-v", cfg.configMount())
+		args = append(args, "-v", cfg.configMount(agent))
 	}
 
 	args = append(args,
@@ -61,9 +62,14 @@ func run(args []string, dryRun bool) int {
 }
 
 func (c AgentConfig) hasConfigMount() bool {
-	return c.ConfigSource != "" && c.ConfigTarget != ""
+	return c.ConfigSource != ""
 }
 
-func (c AgentConfig) configMount() string {
-	return fmt.Sprintf("%s:%s:rw", c.ConfigSource, c.ConfigTarget)
+func (c AgentConfig) configMount(agent string) string {
+	switch agent {
+	case "claude":
+		return fmt.Sprintf("%s:%s:rw", c.ConfigSource, claudeConfigTarget)
+	default:
+		return c.ConfigSource
+	}
 }
