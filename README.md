@@ -94,7 +94,7 @@ AGENT_CODEX_CONFIG_TARGET
 make build
 make install
 make lint
-make run ARGS='codex go cmd'
+make run ARGS='codex go calc'
 make dry-run ARGS='claude php billing'
 ```
 
@@ -152,6 +152,5 @@ Makefile             # build/run/install для CLI
 - `project` берется как директория относительно текущей директории.
 - `language` не влияет на host path и используется только для пути проекта внутри контейнера.
 - `AGENT_CLAUDE_CONFIG_SOURCE` обязателен только для запуска `claude`, но не для `codex`.
-- Этот README описывает текущее состояние кода; команды в этом окружении не запускались.
 
 This project was developed with assistance from AI coding tools.
