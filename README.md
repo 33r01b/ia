@@ -154,3 +154,8 @@ Makefile             # build/run/install для CLI
 - `AGENT_CLAUDE_CONFIG_SOURCE` обязателен только для запуска `claude`, но не для `codex`.
 
 This project was developed with assistance from AI coding tools.
+
+## TODO
+
+1. Добавить поддержку списка файлов, которые нужно монтировать как `/dev/null`, и директорий, которые нужно монтировать через `tmpfs`.
+2. Сделать proxy опциональным.
