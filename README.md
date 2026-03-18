@@ -1,6 +1,18 @@
 # ia
 
-isolated agent runner
+<p align="center">
+  <img src="docs/images/donkey.png" width="220" alt="IA mascot"/>
+</p>
+
+<p align="center">
+  <b>isolated agent runner</b>
+</p>
+
+<p align="center">
+  <i>does things its own way</i>
+</p>
+
+---
 
 Инструмент для изолированного запуска agent CLI в контейнерах поверх локальных проектов.
 
