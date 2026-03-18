@@ -25,7 +25,7 @@
 Формат команды:
 
 ```bash
-ia <agent> <language> <project> [--dry-run]
+ia <agent> <language> <project> [--dry-run] [--mask-file <path>] [--mask-dir <path>]
 ```
 
 Примеры:
@@ -33,6 +33,7 @@ ia <agent> <language> <project> [--dry-run]
 ```bash
 ia codex go calc
 ia claude php billing --dry-run
+ia codex go calc --mask-file .env --mask-dir .cache
 ```
 
 При запуске проект монтируется так:
@@ -67,7 +68,6 @@ IA_HTTP_PROXY
 IA_HTTPS_PROXY
 IA_NO_PROXY
 IA_DOCKER_ADD_HOST
-
 IA_CLAUDE_IMAGE
 IA_CLAUDE_STATE_MOUNT
 IA_CLAUDE_CONFIG_SOURCE
@@ -115,6 +115,29 @@ ia claude php billing --dry-run
 - если `IA_HTTPS_PROXY` не задан, используется `IA_ALL_PROXY`
 - если ни одна proxy-переменная не задана, контейнер запускается без proxy
 
+## Mount Overrides
+
+Для разового запуска можно передавать пути через CLI-опции:
+- `--mask-file <path>` монтирует файл как `/dev/null`
+- `--mask-dir <path>` монтирует директорию через `tmpfs`
+- обе опции можно повторять или передавать список через запятую
+
+Правила путей:
+- относительные пути считаются от корня проекта внутри контейнера: `/app/<language>/<project>`
+- абсолютные пути используются как есть
+- `--mask-dir` дополняет стандартный tmpfs mount для `.idea`
+
+Примеры:
+
+```bash
+ia codex go calc --mask-file .env --mask-file .secrets/local.yaml --mask-dir .cache
+ia codex go calc --mask-file=.env,.secrets/local.yaml --mask-dir=.cache,tmp/runtime
+```
+
+Что это даст внутри контейнера:
+- `.env` и `.secrets/local.yaml` будут замонтированы как `/dev/null`
+- `.cache`, `tmp/runtime` и `.idea` будут замонтированы через `tmpfs`
+
 ## Make
 
 Корневой `Makefile`:
@@ -155,7 +178,7 @@ make -C docker init-codex
 make -C docker/gemini init
 ```
 
-`docker/Makefile` использует те же `IA_*` переменные окружения, что и Go CLI.
+`docker/Makefile` использует часть тех же `IA_*` переменных окружения, что и Go CLI.
 Для `init`-целей имя docker volume извлекается из `IA_*_STATE_MOUNT`.
 
 Для `claude` дополнительно нужен bind mount файла:
@@ -187,4 +210,4 @@ This project was developed with assistance from AI coding tools.
 ## TODO
 
 1. Добавить поддержку конфигов по проектам в `~/.confing/ia/project/`
-2. Добавить поддержку списка файлов, которые нужно монтировать как `/dev/null`, и директорий, которые нужно монтировать через `tmpfs`.
+2. Добавить опцию входа в shell, по умолчанию сразу запускать агента в контейнере

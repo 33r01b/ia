@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 )
 
 const containerWorkRoot = "/app"
 const claudeConfigTarget = "/home/agent/.claude.json"
+const tmpfsMountOptions = "tmpfs-size=1m,tmpfs-mode=0555"
 
 func buildArgs(appCfg Config, agent, language, project string) []string {
 	cfg := appCfg.Agents.byName(agent)
 	projectPath := fmt.Sprintf("%s/%s/%s", containerWorkRoot, language, project)
-
-	projectMount := fmt.Sprintf("./%s:%s", project, projectPath)
-	tmpfsMount := fmt.Sprintf("type=tmpfs,destination=%s/.idea,tmpfs-size=1m,tmpfs-mode=0555", projectPath)
 	workdir := projectPath
 
 	args := []string{
@@ -33,9 +32,17 @@ func buildArgs(appCfg Config, agent, language, project string) []string {
 		args = append(args, "-v", cfg.configMount(agent))
 	}
 
+	args = append(args, "-v", fmt.Sprintf("./%s:%s", project, projectPath))
+
+	for _, target := range appCfg.Docker.TmpfsDirs.Items() {
+		args = appendTmpfsMount(args, resolveMountTarget(projectPath, target))
+	}
+
+	for _, target := range appCfg.Docker.NullFiles.Items() {
+		args = appendNullMount(args, resolveMountTarget(projectPath, target))
+	}
+
 	args = append(args,
-		"-v", projectMount,
-		"--mount", tmpfsMount,
 		"-w", workdir,
 		cfg.Image,
 	)
@@ -68,6 +75,23 @@ func appendEnvArg(args []string, key, value string) []string {
 	}
 
 	return append(args, "-e", key+"="+value)
+}
+
+func appendNullMount(args []string, target string) []string {
+	return append(args, "-v", "/dev/null:"+target)
+}
+
+func appendTmpfsMount(args []string, target string) []string {
+	return append(args, "--mount", fmt.Sprintf("type=tmpfs,destination=%s,%s", target, tmpfsMountOptions))
+}
+
+func resolveMountTarget(projectPath, target string) string {
+	target = normalizeMountTarget(target)
+	if path.IsAbs(target) {
+		return target
+	}
+
+	return path.Join(projectPath, target)
 }
 
 func (c AgentConfig) hasConfigMount() bool {
