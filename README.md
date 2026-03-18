@@ -59,19 +59,6 @@ ia claude php billing --dry-run
 
 Конфигурация читается через `cleanenv` из переменных окружения.
 
-Обязательные переменные:
-
-```bash
-export IA_ALL_PROXY=http://host.docker.internal:8888
-```
-
-Почему в примере `host.docker.internal`:
-- агент запускается внутри Docker-контейнера
-- `host.docker.internal` позволяет контейнеру обратиться к сервису на хост-машине
-- это полезно, если локальный proxy слушает на хосте
-
-Если у тебя другая схема сети, используй свое значение `IA_ALL_PROXY`.
-
 Поддерживаемые переменные:
 
 ```bash
@@ -90,9 +77,43 @@ IA_CODEX_STATE_MOUNT
 IA_CODEX_CONFIG_SOURCE
 ```
 
+## Proxy
+
+Для включения proxy можно задать общий адрес:
+
+```bash
+export IA_ALL_PROXY=http://host.docker.internal:8888
+```
+
+Или отдельно для HTTP и HTTPS:
+
+```bash
+export IA_HTTP_PROXY=http://host.docker.internal:8888
+export IA_HTTPS_PROXY=http://host.docker.internal:8888
+```
+
+Примеры запуска:
+
+```bash
+export IA_ALL_PROXY=http://host.docker.internal:8888
+ia codex go calc
+
+export IA_HTTP_PROXY=http://host.docker.internal:8888
+export IA_HTTPS_PROXY=http://host.docker.internal:8888
+ia claude php billing --dry-run
+```
+
+Почему в примере `host.docker.internal`:
+- агент запускается внутри Docker-контейнера
+- `host.docker.internal` позволяет контейнеру обратиться к сервису на хост-машине
+- это полезно, если локальный proxy слушает на хосте
+
+Если у тебя другая схема сети, используй свои значения proxy-переменных.
+
 Логика proxy:
 - если `IA_HTTP_PROXY` не задан, используется `IA_ALL_PROXY`
 - если `IA_HTTPS_PROXY` не задан, используется `IA_ALL_PROXY`
+- если ни одна proxy-переменная не задана, контейнер запускается без proxy
 
 ## Make
 
@@ -165,5 +186,5 @@ This project was developed with assistance from AI coding tools.
 
 ## TODO
 
-1. Добавить поддержку списка файлов, которые нужно монтировать как `/dev/null`, и директорий, которые нужно монтировать через `tmpfs`.
-2. Сделать proxy опциональным.
+1. Добавить поддержку конфигов по проектам в `~/.confing/ia/project/`
+2. Добавить поддержку списка файлов, которые нужно монтировать как `/dev/null`, и директорий, которые нужно монтировать через `tmpfs`.

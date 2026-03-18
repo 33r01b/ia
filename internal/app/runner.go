@@ -21,12 +21,13 @@ func buildArgs(appCfg Config, agent, language, project string) []string {
 	args := []string{
 		"run", "--rm", "-it",
 		"--add-host=" + appCfg.Docker.AddHost,
-		"-e", "ALL_PROXY=" + appCfg.Docker.AllProxy,
-		"-e", "HTTP_PROXY=" + appCfg.Docker.HTTPProxy,
-		"-e", "HTTPS_PROXY=" + appCfg.Docker.HTTPSProxy,
-		"-e", "NO_PROXY=" + appCfg.Docker.NoProxy,
 		"-v", cfg.StateMount,
 	}
+
+	args = appendEnvArg(args, "ALL_PROXY", appCfg.Docker.AllProxy)
+	args = appendEnvArg(args, "HTTP_PROXY", appCfg.Docker.HTTPProxy)
+	args = appendEnvArg(args, "HTTPS_PROXY", appCfg.Docker.HTTPSProxy)
+	args = appendEnvArg(args, "NO_PROXY", appCfg.Docker.NoProxy)
 
 	if cfg.hasConfigMount() {
 		args = append(args, "-v", cfg.configMount(agent))
@@ -59,6 +60,14 @@ func run(args []string, dryRun bool) int {
 	}
 
 	return 0
+}
+
+func appendEnvArg(args []string, key, value string) []string {
+	if value == "" {
+		return args
+	}
+
+	return append(args, "-e", key+"="+value)
 }
 
 func (c AgentConfig) hasConfigMount() bool {

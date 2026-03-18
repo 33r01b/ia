@@ -13,7 +13,7 @@ type Config struct {
 }
 
 type DockerConfig struct {
-	AllProxy   string `env:"IA_ALL_PROXY" env-required:"true"`
+	AllProxy   string `env:"IA_ALL_PROXY"`
 	HTTPProxy  string `env:"IA_HTTP_PROXY"`
 	HTTPSProxy string `env:"IA_HTTPS_PROXY"`
 	NoProxy    string `env:"IA_NO_PROXY" env-default:"host.docker.internal,localhost"`

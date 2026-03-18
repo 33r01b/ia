@@ -42,6 +42,49 @@ Forbidden unless explicitly instructed:
 - Do not claim that code compiles or tests pass
 - Rely only on static analysis of the codebase
 
+## Shell usage
+
+The agent is allowed to use shell utilities for repository inspection and controlled refactoring.
+
+Allowed read-only tools:
+- find
+- grep / rg
+- sort
+- uniq
+- sed
+- awk
+- cat
+- head / tail
+- wc
+
+Allowed refactoring tools:
+- cp
+- mv
+- mkdir
+- rm (targeted only)
+- sed -i
+- perl (text refactoring only)
+
+Usage rules:
+- Prefer minimal and targeted changes
+- Prefer repository-wide refactoring only when explicitly justified
+- Explain planned file operations before running them
+- List affected files for non-trivial refactoring
+- Prefer simple commands over complex one-liners when possible
+
+Restrictions:
+- Do not execute project code via shell
+- Do not run build tools, package managers, or compilers
+- Do not use perl or shell scripting as a substitute for normal program execution
+- Do not use filesystem-changing commands outside the project workspace
+- Do not perform bulk destructive operations unless explicitly instructed
+
+Before performing destructive or mass-refactoring operations:
+- Explain what will be changed
+- List affected files or file patterns
+- State assumptions and risks
+- Do not proceed without confirmation
+
 ## Verification policy
 
 Since code execution is not available:
