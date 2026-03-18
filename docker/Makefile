@@ -90,4 +90,4 @@ shell-codex:
 		-v ../:/app \
 		-e ALL_PROXY="$(IA_ALL_PROXY)" \
 		-e NO_PROXY="$(IA_NO_PROXY)" \
-		$(IA_CODEX_IMAGE)
+		$(IA_CODEX_IMAGE) bash

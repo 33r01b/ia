@@ -25,8 +25,19 @@
 Формат команды:
 
 ```bash
-ia <agent> <language> <project> [--dry-run] [--mask-file <path>] [--mask-dir <path>]
+ia <agent> <language> <project> [--dry-run] [--shell] [--mask-file <path>] [--mask-dir <path>]
 ```
+
+Аргументы:
+- `agent` выбранный agent CLI: `claude` или `codex`
+- `language` сегмент пути внутри контейнера: `/app/<language>/<project>`
+- `project` директория проекта относительно текущей директории на хосте
+
+Опции:
+- `--dry-run` вывести итоговую команду `docker run` без запуска
+- `--shell` открыть `bash` вместо agent CLI
+- `--mask-file <path>` замаскировать файл через mount в `/dev/null`
+- `--mask-dir <path>` замаскировать директорию через `tmpfs`
 
 Примеры:
 
@@ -34,6 +45,7 @@ ia <agent> <language> <project> [--dry-run] [--mask-file <path>] [--mask-dir <pa
 ia codex go calc
 ia claude php billing --dry-run
 ia codex go calc --mask-file .env --mask-dir .cache
+ia codex go calc --shell
 ```
 
 При запуске проект монтируется так:
@@ -47,8 +59,8 @@ ia codex go calc --mask-file .env --mask-dir .cache
 - `language` используется только для выбора пути внутри контейнера (`./<project>` -> `/app/<language>/<project>`)
 Внутрь `claude`, `codex` и других agent CLI он не передается как отдельный параметр и не включает какой-то специальный режим языка.
 
-После запуска `ia ...` ты попадаешь внутрь контейнера с подготовленным окружением агента.
-Сама утилита не выполняет `codex`, `claude` или другой agent CLI автоматически: нужную команду внутри контейнера нужно запускать вручную.
+По умолчанию `ia ...` сразу запускает agent CLI внутри контейнера.
+Если нужен интерактивный shell вместо агента, добавь `--shell`.
 
 ## Requirements
 
@@ -201,6 +213,7 @@ Makefile             # build/run/install для CLI
 ## Notes
 
 - `claude` и `codex` валидируются как фиксированный набор агентов.
+- по умолчанию `ia` запускает агент сразу; `--shell` оставляет контейнер в `bash`.
 - `project` берется как директория относительно текущей директории.
 - `language` не влияет на host path и используется только для пути проекта внутри контейнера.
 - Claude state хранится в docker volume, а `~/.claude.json` монтируется как отдельный файл через `IA_CLAUDE_CONFIG_SOURCE`.
@@ -210,4 +223,3 @@ This project was developed with assistance from AI coding tools.
 ## TODO
 
 1. Добавить поддержку конфигов по проектам в `~/.confing/ia/project/`
-2. Добавить опцию входа в shell, по умолчанию сразу запускать агента в контейнере

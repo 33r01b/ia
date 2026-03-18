@@ -8,9 +8,10 @@ import (
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  ia <agent> <language> <project> [--dry-run] [--mask-file <path>] [--mask-dir <path>]")
+	fmt.Fprintln(os.Stderr, "  ia <agent> <language> <project> [--dry-run] [--shell] [--mask-file <path>] [--mask-dir <path>]")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Options:")
+	fmt.Fprintln(os.Stderr, "  --shell                start bash instead of the agent CLI")
 	fmt.Fprintln(os.Stderr, "  --dry-run              print docker command without running it")
 	fmt.Fprintln(os.Stderr, "  --mask-file <path>     mount target file as /dev/null inside the container")
 	fmt.Fprintln(os.Stderr, "  --mask-dir <path>      mount target directory as tmpfs inside the container")
@@ -20,6 +21,7 @@ func usage() {
 
 type runOptions struct {
 	dryRun    bool
+	shell     bool
 	nullFiles MountTargets
 	tmpfsDirs MountTargets
 }
@@ -69,7 +71,7 @@ func Run(args []string) int {
 		return 1
 	}
 
-	argsToRun := buildArgs(cfg, agentName, language, project)
+	argsToRun := buildArgs(cfg, agentName, language, project, opts.shell)
 	return run(argsToRun, opts.dryRun)
 }
 
@@ -82,6 +84,8 @@ func parseRunOptions(args []string) (runOptions, error) {
 		switch {
 		case arg == "--dry-run":
 			opts.dryRun = true
+		case arg == "--shell":
+			opts.shell = true
 		case arg == "--mask-file":
 			if i+1 >= len(args) {
 				return runOptions{}, fmt.Errorf("option %q requires a value", arg)

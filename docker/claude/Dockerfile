@@ -26,4 +26,4 @@ ENV PATH="/home/agent/.local/bin:${PATH}"
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
 WORKDIR /app
-CMD ["bash"]
+CMD ["claude"]

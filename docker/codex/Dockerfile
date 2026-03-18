@@ -8,4 +8,4 @@ RUN chown -R node:node /home/node/.codex
 USER node
 
 WORKDIR /app
-ENTRYPOINT ["bash"]
+CMD ["codex"]

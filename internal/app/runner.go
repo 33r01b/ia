@@ -12,7 +12,7 @@ const containerWorkRoot = "/app"
 const claudeConfigTarget = "/home/agent/.claude.json"
 const tmpfsMountOptions = "tmpfs-size=1m,tmpfs-mode=0555"
 
-func buildArgs(appCfg Config, agent, language, project string) []string {
+func buildArgs(appCfg Config, agent, language, project string, shell bool) []string {
 	cfg := appCfg.Agents.byName(agent)
 	projectPath := fmt.Sprintf("%s/%s/%s", containerWorkRoot, language, project)
 	workdir := projectPath
@@ -46,6 +46,10 @@ func buildArgs(appCfg Config, agent, language, project string) []string {
 		"-w", workdir,
 		cfg.Image,
 	)
+
+	if shell {
+		args = append(args, "bash")
+	}
 
 	return args
 }
