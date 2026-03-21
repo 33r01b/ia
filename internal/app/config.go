@@ -41,63 +41,155 @@ type AgentConfig struct {
 }
 
 type envConfig struct {
-	ClaudeImage        string `env:"IA_CLAUDE_IMAGE" env-default:"claude-code"`
-	ClaudeStateMount   string `env:"IA_CLAUDE_STATE_MOUNT" env-default:"claude_state:/home/agent/.claude"`
+	ClaudeImage        string `env:"IA_CLAUDE_IMAGE"`
+	ClaudeStateMount   string `env:"IA_CLAUDE_STATE_MOUNT"`
 	ClaudeConfigSource string `env:"IA_CLAUDE_CONFIG_SOURCE"`
-	CodexImage         string `env:"IA_CODEX_IMAGE" env-default:"codex-cli"`
-	CodexStateMount    string `env:"IA_CODEX_STATE_MOUNT" env-default:"codex_state:/home/node/.codex"`
+	CodexImage         string `env:"IA_CODEX_IMAGE"`
+	CodexStateMount    string `env:"IA_CODEX_STATE_MOUNT"`
 	CodexConfigSource  string `env:"IA_CODEX_CONFIG_SOURCE"`
 	AllProxy           string `env:"IA_ALL_PROXY"`
 	HTTPProxy          string `env:"IA_HTTP_PROXY"`
 	HTTPSProxy         string `env:"IA_HTTPS_PROXY"`
-	NoProxy            string `env:"IA_NO_PROXY" env-default:"host.docker.internal,localhost"`
-	AddHost            string `env:"IA_DOCKER_ADD_HOST" env-default:"host.docker.internal:host-gateway"`
+	NoProxy            string `env:"IA_NO_PROXY"`
+	AddHost            string `env:"IA_DOCKER_ADD_HOST"`
 }
 
-func loadConfig() (Config, error) {
-	var envCfg envConfig
+func loadConfig(project string) (Config, error) {
+	cfg := defaultConfig()
 
-	if err := cleanenv.ReadEnv(&envCfg); err != nil {
+	globalFileCfg, ok, err := loadGlobalConfigFile()
+	if err != nil {
 		return Config{}, err
 	}
-
-	if envCfg.HTTPProxy == "" {
-		envCfg.HTTPProxy = envCfg.AllProxy
+	if ok {
+		cfg.applyFileConfig(globalFileCfg)
 	}
 
-	if envCfg.HTTPSProxy == "" {
-		envCfg.HTTPSProxy = envCfg.AllProxy
+	projectFileCfg, ok, err := loadProjectConfigFile(project)
+	if err != nil {
+		return Config{}, err
+	}
+	if ok {
+		if err := validateProjectFileConfig(project, projectFileCfg); err != nil {
+			return Config{}, err
+		}
+		cfg.applyFileConfig(projectFileCfg)
 	}
 
-	var nullFiles MountTargets
-	var tmpfsDirs MountTargets
-	tmpfsDirs.Add(".idea")
+	envCfg, err := envConfigOverrides()
+	if err != nil {
+		return Config{}, err
+	}
+	applyEnvConfig(&cfg, envCfg)
+	finalizeConfig(&cfg)
 
-	cfg := Config{
+	return cfg, nil
+}
+
+func defaultConfig() Config {
+	return Config{
 		Docker: DockerConfig{
-			AllProxy:   envCfg.AllProxy,
-			HTTPProxy:  envCfg.HTTPProxy,
-			HTTPSProxy: envCfg.HTTPSProxy,
-			NoProxy:    envCfg.NoProxy,
-			AddHost:    envCfg.AddHost,
-			NullFiles:  nullFiles,
-			TmpfsDirs:  tmpfsDirs,
+			NoProxy: "host.docker.internal,localhost",
+			AddHost: "host.docker.internal:host-gateway",
 		},
 		Agents: AgentsConfig{
 			Claude: AgentConfig{
-				Image:        envCfg.ClaudeImage,
-				StateMount:   envCfg.ClaudeStateMount,
-				ConfigSource: envCfg.ClaudeConfigSource,
+				Image:      "claude-code",
+				StateMount: "claude_state:/home/agent/.claude",
 			},
 			Codex: AgentConfig{
-				Image:        envCfg.CodexImage,
-				StateMount:   envCfg.CodexStateMount,
-				ConfigSource: envCfg.CodexConfigSource,
+				Image:      "codex-cli",
+				StateMount: "codex_state:/home/node/.codex",
 			},
 		},
 	}
+}
 
-	return cfg, nil
+func envConfigOverrides() (envConfig, error) {
+	var envCfg envConfig
+	if err := cleanenv.ReadEnv(&envCfg); err != nil {
+		return envConfig{}, err
+	}
+	return envCfg, nil
+}
+
+func applyEnvConfig(cfg *Config, envCfg envConfig) {
+	if envCfg.AllProxy != "" {
+		cfg.Docker.AllProxy = envCfg.AllProxy
+	}
+	if envCfg.HTTPProxy != "" {
+		cfg.Docker.HTTPProxy = envCfg.HTTPProxy
+	}
+	if envCfg.HTTPSProxy != "" {
+		cfg.Docker.HTTPSProxy = envCfg.HTTPSProxy
+	}
+	if envCfg.NoProxy != "" {
+		cfg.Docker.NoProxy = envCfg.NoProxy
+	}
+	if envCfg.AddHost != "" {
+		cfg.Docker.AddHost = envCfg.AddHost
+	}
+
+	if envCfg.ClaudeImage != "" {
+		cfg.Agents.Claude.Image = envCfg.ClaudeImage
+	}
+	if envCfg.ClaudeStateMount != "" {
+		cfg.Agents.Claude.StateMount = envCfg.ClaudeStateMount
+	}
+	if envCfg.ClaudeConfigSource != "" {
+		cfg.Agents.Claude.ConfigSource = envCfg.ClaudeConfigSource
+	}
+
+	if envCfg.CodexImage != "" {
+		cfg.Agents.Codex.Image = envCfg.CodexImage
+	}
+	if envCfg.CodexStateMount != "" {
+		cfg.Agents.Codex.StateMount = envCfg.CodexStateMount
+	}
+	if envCfg.CodexConfigSource != "" {
+		cfg.Agents.Codex.ConfigSource = envCfg.CodexConfigSource
+	}
+}
+
+func finalizeConfig(cfg *Config) {
+	if cfg.Docker.HTTPProxy == "" {
+		cfg.Docker.HTTPProxy = cfg.Docker.AllProxy
+	}
+
+	if cfg.Docker.HTTPSProxy == "" {
+		cfg.Docker.HTTPSProxy = cfg.Docker.AllProxy
+	}
+
+	cfg.Docker.TmpfsDirs.Add(".idea")
+}
+
+func (c *Config) applyFileConfig(fileCfg FileConfig) {
+	c.applyFileDockerConfig(fileCfg.Docker)
+}
+
+func (c *Config) applyFileDockerConfig(fileCfg FileDockerConfig) {
+	if fileCfg.AllProxy != nil {
+		c.Docker.AllProxy = *fileCfg.AllProxy
+	}
+	if fileCfg.HTTPProxy != nil {
+		c.Docker.HTTPProxy = *fileCfg.HTTPProxy
+	}
+	if fileCfg.HTTPSProxy != nil {
+		c.Docker.HTTPSProxy = *fileCfg.HTTPSProxy
+	}
+	if fileCfg.NoProxy != nil {
+		c.Docker.NoProxy = *fileCfg.NoProxy
+	}
+	if fileCfg.AddHost != nil {
+		c.Docker.AddHost = *fileCfg.AddHost
+	}
+
+	for _, target := range fileCfg.MaskFiles {
+		c.Docker.NullFiles.Add(target)
+	}
+	for _, target := range fileCfg.MaskDirs {
+		c.Docker.TmpfsDirs.Add(target)
+	}
 }
 
 func (c *Config) applyRunOptions(opts runOptions) {

@@ -16,6 +16,8 @@ func buildArgs(appCfg Config, agent, language, project string, shell bool) []str
 	cfg := appCfg.Agents.byName(agent)
 	projectPath := fmt.Sprintf("%s/%s/%s", containerWorkRoot, language, project)
 	workdir := projectPath
+	filteredTmpfsDirs := filterHostMountTargets(project, appCfg.Docker.TmpfsDirs)
+	filteredNullFiles := filterHostMountTargets(project, appCfg.Docker.NullFiles)
 
 	args := []string{
 		"run", "--rm", "-it",
@@ -34,11 +36,11 @@ func buildArgs(appCfg Config, agent, language, project string, shell bool) []str
 
 	args = append(args, "-v", fmt.Sprintf("./%s:%s", project, projectPath))
 
-	for _, target := range appCfg.Docker.TmpfsDirs.Items() {
+	for _, target := range filteredTmpfsDirs.Items() {
 		args = appendTmpfsMount(args, resolveMountTarget(projectPath, target))
 	}
 
-	for _, target := range appCfg.Docker.NullFiles.Items() {
+	for _, target := range filteredNullFiles.Items() {
 		args = appendNullMount(args, resolveMountTarget(projectPath, target))
 	}
 

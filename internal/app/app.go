@@ -58,7 +58,7 @@ func Run(args []string) int {
 		return 1
 	}
 
-	cfg, err := loadConfig()
+	cfg, err := loadConfig(project)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: load config: %v\n", err)
 		return 1
